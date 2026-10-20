@@ -1,0 +1,94 @@
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Pytest / Testing / Coverage
+.pytest_cache/
+.cache/
+.coverage
+.coverage.*
+.tox/
+.nox/
+coverage.xml
+nosetests.xml
+htmlcov/
+
+# Node.js / Frontend
+node_modules/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Vite & Frontend Build Outputs
+dist/
+dist-ssr/
+*.local
+.vite/
+.vite-temp/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.json-key
+
+# Keep example files tracked
+!.env.example
+!ui-bundle/.env.example
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+
+# RetainIQ keys (any folder)
+**/retainiq-*.json
+backend/retainiq-*.json
+retainiq-*.json
+# General GCP Service Account keys (safeguard)
+*-key.json
+*credentials*.json

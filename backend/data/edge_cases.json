@@ -1,0 +1,20 @@
+{
+  "accounts": [
+    {"account_id": "E-zero_collapse", "account_name": "Zero Collapse", "plan_tier": "Growth", "weekly_logins": [30, 31, 29, 30, 32, 30, 28, 31, 12, 3, 0, 0]},
+    {"account_id": "E-transient_dip", "account_name": "Transient Dip", "plan_tier": "Growth", "weekly_logins": [20, 21, 19, 22, 20, 21, 20, 21, 20, 8, 19, 21]},
+    {"account_id": "E-recovering", "account_name": "Recovering Co", "plan_tier": "Growth", "weekly_logins": [30, 29, 31, 30, 28, 30, 29, 30, 15, 12, 25, 28]},
+    {"account_id": "E-low_volume", "account_name": "Low Volume Shop", "plan_tier": "Starter", "weekly_logins": [2, 3, 1, 2, 3, 2, 2, 3, 1, 0, 0, 1]},
+    {"account_id": "E-spike", "account_name": "Spike Retail", "plan_tier": "Growth", "weekly_logins": [10, 11, 9, 10, 10, 11, 10, 9, 25, 28, 30, 31]},
+    {"account_id": "E-len_9", "account_name": "Nine Weeks", "plan_tier": "Growth", "weekly_logins": [30, 30, 30, 30, 30, 10, 8, 6, 5]},
+    {"account_id": "E-len_10", "account_name": "Ten Weeks", "plan_tier": "Growth", "weekly_logins": [30, 30, 30, 30, 30, 30, 10, 8, 6, 5]},
+    {"account_id": "E-no_baseline", "account_name": "No Baseline", "plan_tier": "Starter", "weekly_logins": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 6]},
+    {"account_id": "E-long_onboarding_3", "account_name": "Long Onboarding 3", "plan_tier": "Growth", "weekly_logins": [40, 35, 30, 12, 11, 13, 12, 12, 11, 13, 12, 12]},
+    {"account_id": "E-long_onboarding_4", "account_name": "Long Onboarding 4", "plan_tier": "Growth", "weekly_logins": [40, 35, 30, 28, 12, 11, 13, 12, 12, 11, 13, 12]},
+    {"account_id": "E-long_onboarding_5", "account_name": "Long Onboarding 5", "plan_tier": "Growth", "weekly_logins": [40, 35, 30, 28, 25, 12, 11, 13, 12, 12, 11, 13]},
+    {"account_id": "E-early_collapse", "account_name": "Early Collapse", "plan_tier": "Growth", "weekly_logins": [40, 40, 40, 5, 5, 5, 5, 5, 5, 5, 5, 5]},
+    {"account_id": "E-invalid_negative", "account_name": "Negative Value", "plan_tier": "Starter", "weekly_logins": [10, 12, -4, 11, 10, 12, 11, 10, 12, 11]},
+    {"account_id": "E-invalid_null", "account_name": "Null Value", "plan_tier": "Starter", "weekly_logins": [10, 12, null, 11, 10, 12, 11, 10, 12, 11]},
+    {"account_id": "E-invalid_string", "account_name": "String Value", "plan_tier": "Starter", "weekly_logins": [10, 12, "abc", 11, 10, 12, 11, 10, 12, 11]},
+    {"account_id": "E-invalid_empty", "account_name": "Empty History", "plan_tier": "Starter", "weekly_logins": []}
+  ]
+}

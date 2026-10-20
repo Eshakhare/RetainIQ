@@ -1,0 +1,3 @@
+"""RetainIQ: deterministic churn-risk early warning engine (v1)."""
+
+__version__ = "1.0.0"

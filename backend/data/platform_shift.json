@@ -1,0 +1,10 @@
+{
+  "accounts": [
+    {"account_id": "P-01", "account_name": "Platform Shift 1", "plan_tier": "Growth", "weekly_logins": [30, 30, 30, 30, 30, 30, 30, 30, 24, 22, 20, 12]},
+    {"account_id": "P-02", "account_name": "Platform Shift 2", "plan_tier": "Starter", "weekly_logins": [25, 25, 25, 25, 25, 25, 25, 25, 20, 18, 15, 9]},
+    {"account_id": "P-03", "account_name": "Platform Shift 3", "plan_tier": "Enterprise", "weekly_logins": [50, 50, 50, 50, 50, 50, 50, 50, 40, 36, 30, 18]},
+    {"account_id": "P-04", "account_name": "Platform Shift 4", "plan_tier": "Growth", "weekly_logins": [40, 40, 40, 40, 40, 40, 40, 40, 32, 30, 25, 15]},
+    {"account_id": "P-05", "account_name": "Platform Shift 5", "plan_tier": "Starter", "weekly_logins": [20, 20, 20, 20, 20, 20, 20, 20, 16, 15, 15, 9]},
+    {"account_id": "P-06", "account_name": "Platform Shift 6", "plan_tier": "Growth", "weekly_logins": [35, 35, 35, 35, 35, 35, 35, 35, 28, 26, 25, 15]}
+  ]
+}
