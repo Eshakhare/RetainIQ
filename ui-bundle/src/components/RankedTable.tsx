@@ -35,6 +35,10 @@ export const RankedTable: React.FC<RankedTableProps> = ({
 
   const filteredResults = useMemo(() => {
     return results.filter((acc) => {
+      // Exclude rejected input / ERROR records from customer risk portfolio
+      if (acc.tier === 'ERROR') {
+        return false;
+      }
       // Tier filter
       if (selectedTier && acc.tier !== selectedTier) {
         return false;
@@ -294,11 +298,11 @@ export const RankedTable: React.FC<RankedTableProps> = ({
                       ) : (
                         <span
                           className={
-                            acc.drop_pct <= -0.3
+                            acc.drop_pct <= -30
                               ? 'text-red-600 font-bold'
                               : acc.drop_pct < 0
                               ? 'text-amber-600 font-semibold'
-                              : acc.drop_pct > 0.2
+                              : acc.drop_pct >= 20
                               ? 'text-emerald-600 font-semibold'
                               : 'text-slate-700'
                           }
@@ -315,7 +319,7 @@ export const RankedTable: React.FC<RankedTableProps> = ({
                       ) : (
                         <span
                           className={
-                            acc.last2_drop_pct <= -0.3
+                            acc.last2_drop_pct <= -30
                               ? 'text-red-600'
                               : acc.last2_drop_pct < 0
                               ? 'text-amber-600'

@@ -5,7 +5,6 @@ import {
   AnalyzeResponse,
   AccountDetailResponse,
   BacktestItem,
-  CompareItem,
   AgentBriefingResponse,
   AnalyzePayload,
 } from './types';
@@ -113,11 +112,6 @@ export const api = {
   getBacktest(dataset: string = 'seed'): Promise<BacktestItem[]> {
     const params = new URLSearchParams({ dataset });
     return request<BacktestItem[]>(`/api/backtest?${params.toString()}`);
-  },
-
-  getCompare(dataset: string = 'seed'): Promise<CompareItem[]> {
-    const params = new URLSearchParams({ dataset });
-    return request<CompareItem[]>(`/api/compare?${params.toString()}`);
   },
 
   getAgentBriefing(dataset: string = 'seed', mode: 'auto' | 'template' = 'auto', refresh: boolean = false): Promise<AgentBriefingResponse> {

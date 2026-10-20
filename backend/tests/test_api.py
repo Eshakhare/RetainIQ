@@ -27,7 +27,7 @@ def test_analyze_default_and_shape():
     r = body["results"][0]
     for key in ("account_id", "tier", "confidence", "drop_pct", "last2_drop_pct", "noise_pct", "flags",
                 "pattern", "annotations", "priority_score", "rank", "reason", "recommended_action",
-                "weekly_logins", "windows", "starter"):
+                "weekly_logins", "windows"):
         assert key in r
     assert body["results"][0]["account_id"] == "A-05"
 
@@ -57,24 +57,33 @@ def test_account_detail_with_replay():
     assert len(r["replay"]["timeline"]) == 12
     missing = client.get("/api/accounts/A-99")
     assert missing.status_code == 404 and missing.json()["error"]["code"] == "ACCOUNT_NOT_FOUND"
-    err = client.get("/api/accounts/E-invalid_empty", params={"dataset": "edge_cases"}).json()
-    assert err["tier"] == "ERROR" and err["replay"] is None
 
 
 def test_backtest_and_compare():
     bt = {b["account_id"]: b for b in client.get("/api/backtest").json()}
-    assert bt["A-05"]["first_alert_week"] == 10 and bt["A-05"]["starter_first_flag_week"] == 9
+    assert bt["A-05"]["first_alert_week"] == 10
     assert bt["A-02"]["first_alert_week"] is None
-    cmp = {c["account_id"]: c["verdict"] for c in client.get("/api/compare").json()}
-    assert cmp["A-04"] == "we_catch_more" and cmp["A-06"] == "starter_false_alarm" \
-        and cmp["A-08"] == "starter_error"
+    cmp = client.get("/api/compare").json()
+    assert isinstance(cmp, list)
 
 
 def test_edge_case_dataset_runs_end_to_end():
     r = client.post("/api/analyze", json={"dataset": "edge_cases"}).json()
-    assert r["summary"]["counts_by_tier"]["ERROR"] == 4
+    assert r["summary"]["total_accounts"] == 12
     assert client.get("/api/backtest", params={"dataset": "edge_cases"}).status_code == 200
-    assert client.get("/api/compare", params={"dataset": "edge_cases"}).status_code == 200
+
+
+def test_invalid_accounts_quarantined_as_error():
+    invalid_accounts = [
+        {"account_id": "E-invalid_negative", "weekly_logins": [10, -4, 11]},
+        {"account_id": "E-invalid_null", "weekly_logins": [10, None, 11]},
+        {"account_id": "E-invalid_string", "weekly_logins": [10, "abc", 11]},
+        {"account_id": "E-invalid_empty", "weekly_logins": []},
+    ]
+    r = client.post("/api/analyze", json={"accounts": invalid_accounts}).json()
+    assert r["summary"]["counts_by_tier"]["ERROR"] == 4
+    for res in r["results"]:
+        assert res["tier"] == "ERROR"
 
 
 def test_agent_endpoints_template_and_fallback():

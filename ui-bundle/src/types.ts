@@ -51,7 +51,7 @@ export interface AccountResult {
   recommended_action: string;
   weekly_logins: number[];
   windows: Windows | null;
-  starter: StarterResult;
+  starter?: StarterResult;
   error: AccountError | null;
 }
 
@@ -105,7 +105,7 @@ export interface AnalyzeResponse {
 export interface ReplayWeek {
   week: number;
   tier: Tier;
-  starter_flagged: boolean | null;
+  starter_flagged?: boolean | null;
 }
 
 export interface ReplayData {
@@ -113,7 +113,7 @@ export interface ReplayData {
   first_alert_week: number | null;
   first_alert_tier: Tier | null;
   first_week_by_tier: Record<string, number>;
-  starter_first_flag_week: number | null;
+  starter_first_flag_week?: number | null;
 }
 
 export interface AccountDetailResponse extends AccountResult {
@@ -127,7 +127,7 @@ export interface BacktestItem {
   first_alert_week: number | null;
   first_alert_tier: Tier | null;
   first_week_by_tier: Record<string, number>;
-  starter_first_flag_week: number | null;
+  starter_first_flag_week?: number | null;
 }
 
 export type Verdict = 'agree' | 'we_catch_more' | 'starter_false_alarm' | 'starter_error';

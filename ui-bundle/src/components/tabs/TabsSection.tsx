@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { CompareTab } from './CompareTab';
 import { ReplayTab } from './ReplayTab';
 import { HowItWorksTab } from './HowItWorksTab';
 import { WhatIfTab } from './WhatIfTab';
@@ -8,7 +7,6 @@ import {
   ConfigResponse,
 } from '../../types';
 import {
-  GitCompare,
   History,
   BookOpen,
   Sliders,
@@ -20,21 +18,16 @@ interface TabsSectionProps {
   results: AccountResult[];
 }
 
-type TabKey = 'compare' | 'replay' | 'howItWorks' | 'whatIf';
+type TabKey = 'replay' | 'howItWorks' | 'whatIf';
 
 export const TabsSection: React.FC<TabsSectionProps> = ({
   dataset,
   config,
   results,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabKey>('compare');
+  const [activeTab, setActiveTab] = useState<TabKey>('replay');
 
   const tabs: Array<{ key: TabKey; label: string; icon: React.ReactNode }> = [
-    {
-      key: 'compare',
-      label: 'Compare vs Baseline',
-      icon: <GitCompare className="w-4 h-4" />,
-    },
     {
       key: 'replay',
       label: 'Historical Replay',
@@ -80,7 +73,6 @@ export const TabsSection: React.FC<TabsSectionProps> = ({
 
       {/* Tab Content Panel */}
       <div className="p-6">
-        {activeTab === 'compare' && <CompareTab dataset={dataset} />}
         {activeTab === 'replay' && <ReplayTab dataset={dataset} />}
         {activeTab === 'howItWorks' && <HowItWorksTab config={config} />}
         {activeTab === 'whatIf' && (

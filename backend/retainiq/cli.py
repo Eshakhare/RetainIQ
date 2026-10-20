@@ -100,8 +100,8 @@ def main(argv: List[str] = None) -> int:
     if "backtest" in extra:
         print("\nReplay (week = weeks of history at the time)")
         for b in extra["backtest"]:
-            print(f"  {b['account_id']:<8}first alert: week {b['first_alert_week']} ({b['first_alert_tier']})"
-                  f"   starter first flag: week {b['starter_first_flag_week']}")
+            alert_info = f"first alert: week {b['first_alert_week']} ({b['first_alert_tier']})" if b['first_alert_week'] else "no alert triggered"
+            print(f"  {b['account_id']:<8}{alert_info}")
     if "briefing" in extra:
         b = extra["briefing"]
         print(f"\nWeekly briefing [{b['source']}]: {b['headline']}")

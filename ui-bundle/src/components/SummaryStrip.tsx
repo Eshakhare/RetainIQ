@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tier, AnalyzeSummary } from '../types';
-import { TIER_CONFIG, ALL_TIERS } from '../utils/formatters';
+import { TIER_CONFIG, PORTFOLIO_TIERS } from '../utils/formatters';
 import { Filter, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 interface SummaryStripProps {
@@ -18,8 +18,8 @@ export const SummaryStrip: React.FC<SummaryStripProps> = ({
 }) => {
   if (isLoading || !summary) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-        {Array.from({ length: 8 }).map((_, i) => (
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+        {Array.from({ length: 7 }).map((_, i) => (
           <div
             key={i}
             className="h-20 bg-slate-100 animate-pulse rounded-xl border border-slate-200"
@@ -29,13 +29,16 @@ export const SummaryStrip: React.FC<SummaryStripProps> = ({
     );
   }
 
+  const validTotal = PORTFOLIO_TIERS.reduce(
+    (sum, t) => sum + (summary.counts_by_tier[t] ?? 0),
+    0
+  );
   const flaggedCount = summary.flagged;
-  const totalCount = summary.total_accounts;
-  const flaggedPct = totalCount > 0 ? Math.round((flaggedCount / totalCount) * 100) : 0;
+  const flaggedPct = validTotal > 0 ? Math.round((flaggedCount / validTotal) * 100) : 0;
 
   return (
     <div className="space-y-2 mb-6">
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
         {/* Highlight Flagged / Total Tile */}
         <div
           onClick={() => onSelectTier(null)}
@@ -66,7 +69,7 @@ export const SummaryStrip: React.FC<SummaryStripProps> = ({
                 {flaggedCount}
               </span>
               <span className={`text-xs ${selectedTier === null ? 'text-slate-400' : 'text-slate-500'}`}>
-                of {totalCount}
+                of {validTotal}
               </span>
             </div>
             <div className={`text-[10px] ${selectedTier === null ? 'text-sky-300' : 'text-sky-600 font-medium'}`}>
@@ -76,7 +79,7 @@ export const SummaryStrip: React.FC<SummaryStripProps> = ({
         </div>
 
         {/* Tier Tiles */}
-        {ALL_TIERS.map((tier) => {
+        {PORTFOLIO_TIERS.map((tier) => {
           const cfg = TIER_CONFIG[tier];
           const count = summary.counts_by_tier[tier] ?? 0;
           const isSelected = selectedTier === tier;
@@ -118,7 +121,7 @@ export const SummaryStrip: React.FC<SummaryStripProps> = ({
 
               {/* Subtitle / fraction */}
               <div className="text-[10px] text-slate-400 mt-0.5">
-                {totalCount > 0 ? `${Math.round((count / totalCount) * 100)}%` : '0%'}
+                {validTotal > 0 ? `${Math.round((count / validTotal) * 100)}%` : '0%'}
               </div>
             </button>
           );

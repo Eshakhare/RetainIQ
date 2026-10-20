@@ -12,7 +12,7 @@ DATA_DIR = ROOT / "data"
 #: Dataset id -> (file name, display name)
 DATASETS = {
     "seed": ("seed_accounts.json", "Seed data (8 accounts, case study)"),
-    "edge_cases": ("edge_cases.json", "Edge-case fixtures"),
+    "edge_cases": ("edge_cases.json", "Edge-case fixtures (12 accounts)"),
     "platform_shift": ("platform_shift.json", "Platform-wide shift fixture (6 accounts)"),
 }
 

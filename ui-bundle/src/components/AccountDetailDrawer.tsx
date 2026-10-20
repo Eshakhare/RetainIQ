@@ -365,7 +365,7 @@ export const AccountDetailDrawer: React.FC<AccountDetailDrawerProps> = ({
                 </div>
                 <div
                   className={`text-lg font-bold mt-1 ${
-                    currentData.drop_pct && currentData.drop_pct <= -0.3
+                    currentData.drop_pct && currentData.drop_pct <= -30
                       ? 'text-red-600'
                       : 'text-slate-900'
                   }`}
@@ -507,15 +507,12 @@ export const AccountDetailDrawer: React.FC<AccountDetailDrawerProps> = ({
                   {detail.replay.timeline.map((step) => {
                     const stepCfg = TIER_CONFIG[step.tier] || TIER_CONFIG.TOO_NEW;
                     const isFirstAlert = detail.replay?.first_alert_week === step.week;
-                    const isStarterFlag = step.starter_flagged;
 
                     return (
                       <div
                         key={step.week}
                         className="flex flex-col items-center gap-1"
-                        title={`Week ${step.week}: ${stepCfg.displayName}${
-                          isStarterFlag ? ' (Starter flagged)' : ''
-                        }`}
+                        title={`Week ${step.week}: ${stepCfg.displayName}`}
                       >
                         <span className="text-[9px] font-mono text-slate-400">
                           W{step.week}
@@ -527,12 +524,6 @@ export const AccountDetailDrawer: React.FC<AccountDetailDrawerProps> = ({
                           style={{ backgroundColor: stepCfg.hexColor }}
                         >
                           {step.week}
-                          {isStarterFlag && (
-                            <span
-                              className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-yellow-400 border border-slate-900 rounded-full"
-                              title="Starter utility flagged this week"
-                            />
-                          )}
                         </div>
                       </div>
                     );
@@ -545,10 +536,7 @@ export const AccountDetailDrawer: React.FC<AccountDetailDrawerProps> = ({
                 {detail.replay.first_alert_week ? (
                   <span>
                     RetainIQ first alerted in <strong>week {detail.replay.first_alert_week}</strong>
-                    {detail.replay.first_alert_tier ? ` (${detail.replay.first_alert_tier})` : ''};
-                    {detail.replay.starter_first_flag_week
-                      ? ` the starter utility in week ${detail.replay.starter_first_flag_week}.`
-                      : ' the starter utility never alerted.'}
+                    {detail.replay.first_alert_tier ? ` (${detail.replay.first_alert_tier})` : ''}.
                   </span>
                 ) : (
                   <span>No alerts triggered for this account across all evaluated weeks.</span>

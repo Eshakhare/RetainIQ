@@ -42,8 +42,10 @@ export const HowItWorksTab: React.FC<HowItWorksTabProps> = ({ config }) => {
         </div>
 
         <div className="divide-y divide-slate-100">
-          {Object.entries(definitions.tiers).map(([tierKey, ruleText]) => {
-            const tier = tierKey as Tier;
+          {Object.entries(definitions.tiers)
+            .filter(([tierKey]) => tierKey !== 'ERROR')
+            .map(([tierKey, ruleText]) => {
+              const tier = tierKey as Tier;
             const cfg = TIER_CONFIG[tier] || TIER_CONFIG.ERROR;
             const isFlagged = flagged_tiers.includes(tier);
 

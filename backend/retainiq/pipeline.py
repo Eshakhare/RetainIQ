@@ -15,7 +15,6 @@ from .explain import explain
 from .features import compute_features
 from .loader import validate_accounts
 from .rank import priority_score, rank_results
-from .starter_baseline import starter_assess
 
 
 def _pct(x: Optional[float], digits: int = 1) -> Optional[float]:
@@ -59,7 +58,6 @@ def _build_result(account: Dict[str, Any], cfg: Config) -> Dict[str, Any]:
         "recommended_action": "",
         "weekly_logins": weekly,
         "windows": _windows(f),
-        "starter": starter_assess(weekly),
         "error": None,
     }
 
@@ -96,7 +94,6 @@ def _error_result(stub: Dict[str, Any]) -> Dict[str, Any]:
         "recommended_action": "",
         "weekly_logins": weekly,
         "windows": None,
-        "starter": {"trend_pct": None, "flagged": None, "error": None},
         "error": stub["error"],
     }
 

@@ -85,23 +85,29 @@ export const TIER_CONFIG: Record<
   },
 };
 
-export const ALL_TIERS: Tier[] = [
+export const PORTFOLIO_TIERS: Tier[] = [
   'CRITICAL',
   'AT_RISK',
   'WATCH',
   'NEEDS_REVIEW',
   'HEALTHY',
   'TOO_NEW',
-  'ERROR',
 ];
 
-export function formatPct(val: number | null | undefined): string {
+export const ALL_TIERS: Tier[] = PORTFOLIO_TIERS;
+
+export function formatPct(val: number | null | undefined, decimals = 1): string {
   if (val === null || val === undefined || isNaN(val)) {
     return 'n/a';
   }
-  const pct = Math.round(val * 100);
-  if (pct > 0) return `+${pct}%`;
-  return `${pct}%`;
+  // Backend provides percentage values already scaled to percentage units (e.g. -73.2).
+  // Do NOT multiply by 100 again.
+  if (Math.abs(val) < 0.05) {
+    return '0%';
+  }
+  const formatted = Number.isInteger(val) ? val.toString() : val.toFixed(decimals);
+  if (val > 0) return `+${formatted}%`;
+  return `${formatted}%`;
 }
 
 export function formatNumber(val: number | null | undefined, decimals = 1): string {

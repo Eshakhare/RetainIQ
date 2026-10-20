@@ -63,12 +63,9 @@ def test_seed_no_platform_shift():
     assert report["summary"]["flagged"] == 3
 
 
-def test_seed_compare_verdicts():
-    cmp = {c["account_id"]: c for c in compare(analyze(load_raw_accounts("seed")))}
-    assert cmp["A-04"]["verdict"] == "we_catch_more" and cmp["A-04"]["starter"]["flagged"] is False
-    assert cmp["A-06"]["verdict"] == "starter_false_alarm"
-    assert cmp["A-08"]["verdict"] == "starter_error" and "ZeroDivisionError" in cmp["A-08"]["starter"]["error"]
-    assert cmp["A-01"]["verdict"] == "agree"
+def test_seed_compare_deprecated():
+    # Comparison against starter utility is removed
+    assert compare(analyze(load_raw_accounts("seed"))) == []
 
 
 # ------------------------------------------------------------------ fixtures
@@ -97,11 +94,19 @@ def test_early_ramp_not_flagged_on_real_collapse(seed):
     assert "early_ramp_down" not in seed["A-01"]["flags"]
 
 
-def test_invalid_accounts_rejected_others_run(edge):
+def test_invalid_accounts_rejected_others_run():
+    invalid_accounts = [
+        {"account_id": "E-zero_collapse", "plan_tier": "Growth", "weekly_logins": [30, 31, 29, 30, 32, 30, 28, 31, 12, 3, 0, 0]},
+        {"account_id": "E-invalid_negative", "account_name": "Negative Value", "plan_tier": "Starter", "weekly_logins": [10, 12, -4, 11, 10, 12, 11, 10, 12, 11]},
+        {"account_id": "E-invalid_null", "account_name": "Null Value", "plan_tier": "Starter", "weekly_logins": [10, 12, None, 11, 10, 12, 11, 10, 12, 11]},
+        {"account_id": "E-invalid_string", "account_name": "String Value", "plan_tier": "Starter", "weekly_logins": [10, 12, "abc", 11, 10, 12, 11, 10, 12, 11]},
+        {"account_id": "E-invalid_empty", "account_name": "Empty History", "plan_tier": "Starter", "weekly_logins": []},
+    ]
+    results = by_id(analyze(invalid_accounts))
     for n in ("negative", "null", "string", "empty"):
-        r = edge[f"E-invalid_{n}"]
+        r = results[f"E-invalid_{n}"]
         assert r["tier"] == "ERROR" and r["error"]["code"] and r["reason"]
-    assert edge["E-zero_collapse"]["tier"] == "CRITICAL"
+    assert results["E-zero_collapse"]["tier"] == "CRITICAL"
 
 
 def test_platform_shift_annotates_and_lowers_confidence():
@@ -183,8 +188,8 @@ def test_replay_matches_design():
     results = by_id(analyze(load_raw_accounts("seed")))
     a5 = replay_series(results["A-05"]["weekly_logins"], Config())
     a1 = replay_series(results["A-01"]["weekly_logins"], Config())
-    assert (a5["first_alert_week"], a5["first_alert_tier"], a5["starter_first_flag_week"]) == (10, "CRITICAL", 9)
-    assert (a1["first_alert_week"], a1["first_alert_tier"], a1["starter_first_flag_week"]) == (10, "AT_RISK", 10)
+    assert (a5["first_alert_week"], a5["first_alert_tier"]) == (10, "CRITICAL")
+    assert (a1["first_alert_week"], a1["first_alert_tier"]) == (10, "AT_RISK")
 
 
 def test_replay_has_no_lookahead():
