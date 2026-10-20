@@ -123,3 +123,31 @@ export function getTierColor(tier: Tier | string): string {
   }
   return '#94a3b8';
 }
+
+export function formatThresholdValue(key: string, val: number): string {
+  if (
+    key.endsWith('_drop') ||
+    key.endsWith('_last2') ||
+    key.endsWith('_fraction') ||
+    key.endsWith('_shift_threshold')
+  ) {
+    const pct = Math.round(val * 100);
+    return `${pct > 0 ? '+' : ''}${pct}%`;
+  }
+  if (key.endsWith('_weeks') || key === 'min_weeks_to_score') {
+    return `${val} wks`;
+  }
+  if (key.endsWith('_multiplier') || key.endsWith('_ratio')) {
+    return `${val}x`;
+  }
+  if (key === 'low_volume_baseline') {
+    return `${val} logins/wk`;
+  }
+  if (key === 'recovering_points') {
+    return `+${Math.round(val * 100)}% pts`;
+  }
+  if (key === 'volatile_noise') {
+    return `${Math.round(val * 100)}% CV`;
+  }
+  return String(val);
+}

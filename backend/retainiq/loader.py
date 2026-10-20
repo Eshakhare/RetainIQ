@@ -11,9 +11,9 @@ DATA_DIR = ROOT / "data"
 
 #: Dataset id -> (file name, display name)
 DATASETS = {
-    "seed": ("seed_accounts.json", "Seed data (8 accounts, case study)"),
-    "edge_cases": ("edge_cases.json", "Edge-case fixtures (12 accounts)"),
-    "platform_shift": ("platform_shift.json", "Platform-wide shift fixture (6 accounts)"),
+    "seed": ("seed_accounts.json", "Seed Portfolio (Case Study)"),
+    "edge_cases": ("edge_cases.json", "Edge-Case Fixtures"),
+    "platform_shift": ("platform_shift.json", "Platform-Wide Shift Fixture"),
 }
 
 MAX_WEEKS = 520          # sanity limit: 10 years of weekly data

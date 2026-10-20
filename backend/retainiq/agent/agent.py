@@ -22,27 +22,44 @@ from .template import template_account_brief, template_briefing
 from .tools import TOOL_DECLARATIONS, AgentTools
 from .validate import Facts, validate_output
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v4"
 MAX_TOOL_CALLS = 6
 TIMEOUT_SECONDS = 20.0
 
-SYSTEM_PROMPT = """You are an assistant to a Customer Success manager at a B2B software company.
+
+def build_system_prompt(kind: str = "briefing", target: Optional[str] = None) -> str:
+    if kind == "account_brief":
+        scope_rule = f"- The priorities list must contain ONLY the single requested account {target!r} (exactly 1 item in priorities). Do NOT include any other accounts."
+    else:
+        scope_rule = "- List accounts in the same order as their rank. Include every CRITICAL and AT_RISK account."
+
+    return f"""You are an assistant to a Customer Success manager at a B2B software company.
 You turn the output of a deterministic churn-risk engine into a short, prioritised, readable briefing.
 
 Rules:
 - Use ONLY the numbers and facts provided by the tools or the message. Never calculate new numbers, never estimate.
-- Never change or invent a tier. Copy each tier exactly as the engine reports it (e.g. CRITICAL, AT_RISK, WATCH, NEEDS_REVIEW).
+- Never change or invent a tier. Copy each tier exactly as the engine reports it (e.g. CRITICAL, AT_RISK, WATCH, NEEDS_REVIEW, HEALTHY, TOO_NEW).
 - Refer to accounts only by the account_id returned by the tools.
-- List accounts in the same order as their rank. Include every CRITICAL and AT_RISK account.
+{scope_rule}
 - State uncertainty when present: confidence, low_volume, possible_platform_cause, early_ramp_down.
-- Do not speculate about causes; suggest questions the CS rep could ask instead.
+- Platform-Wide Shifts (possible_platform_cause):
+  If `possible_platform_cause` appears in annotations, platform_shift_alert, or portfolio stats:
+  * Do NOT treat this drop as an isolated account churn issue. Multiple accounts across the platform declined together in the latest week.
+  * Explicitly note in the headline and in `why` that this drop coincided with a platform-wide shift across accounts.
+  * In `next_step`, instruct the team to investigate internal platform health (service outages, release bugs, auth issues, tracking glitches, holidays) BEFORE contacting the customer.
+  * Suggested questions must ask whether the customer experienced system downtime, login issues, or service disruptions during the drop.
+- Do not speculate about causes beyond verified platform shift facts; suggest questions the CS rep could ask instead.
+- Avoid abbreviations and acronyms: Write 'week-over-week' or 'compared to the prior week' instead of 'WoW'.
 - Keep each account to 2-3 sentences. Do not include URLs. Give at most 3 questions per account.
 - Only login counts are available, so keep suggested actions general and say so in `note`.
 - Tools may be called to look up more detail (get_account, get_replay). Do not exceed the tool budget.
 
 Reply with ONLY a JSON object, no markdown, in exactly this shape:
-{"headline": "string", "priorities": [{"account_id": "string", "tier": "string", "why": "string", "next_step": "string", "questions": ["string"]}], "note": "string"}
+{{"headline": "string", "priorities": [{{"account_id": "string", "tier": "string", "why": "string", "next_step": "string", "questions": ["string"]}}], "note": "string"}}
 """
+
+
+SYSTEM_PROMPT = build_system_prompt("briefing")
 
 
 class AgentTimeout(Exception):
@@ -128,19 +145,19 @@ class Agent:
 
     @staticmethod
     def _prefetch_plan(target: Optional[str]):
-        plan = [("get_portfolio_stats", {}), ("list_flagged", {})]
         if target:
-            plan.append(("get_account", {"account_id": target}))
-        return plan
+            return [("get_portfolio_stats", {}), ("get_account", {"account_id": target}), ("get_replay", {"account_id": target})]
+        return [("get_portfolio_stats", {}), ("list_flagged", {})]
 
     def _llm_loop(self, kind, target, prefetched, tools: AgentTools, facts: Facts) -> Dict[str, Any]:
         deadline = time.monotonic() + self.timeout
+        sys_prompt = build_system_prompt(kind, target)
         if kind == "briefing":
             task = "Write this week's briefing for the head of Customer Success covering every flagged account."
         else:
             task = (f"Write an outreach brief for account {target}: what happened in plain language, "
                     f"a suggested next step, and 2-3 questions for the rep. The priorities list must "
-                    f"contain exactly this one account.")
+                    f"contain exactly this one account ({target}).")
         messages: List[Dict[str, Any]] = [{
             "role": "user",
             "text": f"{task}\n\nFacts already retrieved (JSON):\n{json.dumps(prefetched)}",
@@ -150,7 +167,7 @@ class Agent:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise AgentTimeout()
-            resp = self.client.generate(SYSTEM_PROMPT, messages,
+            resp = self.client.generate(sys_prompt, messages,
                                         TOOL_DECLARATIONS if calls < self.max_tool_calls else None,
                                         timeout=remaining)
             if not resp.tool_calls:
@@ -179,12 +196,32 @@ class Agent:
 
     def _finalize(self, output: Dict[str, Any], source: str, validated: bool,
                   reason: Optional[str] = None) -> Dict[str, Any]:
-        """Attach names (re-added after validation) and provenance."""
+        """Attach names (re-added after validation), platform incident summary, and provenance."""
         priorities = []
         for p in output["priorities"]:
             q = dict(p)
             q["account_name"] = self._names.get(p["account_id"], p["account_id"])
             priorities.append(q)
+
+        platform_incident = None
+        shift_annos = [a for a in self.report.get("annotations", []) if a.get("code") == "possible_platform_cause"]
+        if shift_annos:
+            shift = shift_annos[0]
+            affected_ids = [r["account_id"] for r in self.report.get("results", []) if "possible_platform_cause" in r.get("annotations", [])]
+            platform_incident = {
+                "active": True,
+                "summary": shift.get("message", "A platform-wide shift was detected across multiple accounts."),
+                "median_wow_change_pct": shift.get("median_wow_change_pct"),
+                "accounts_affected_count": len(affected_ids),
+                "affected_account_ids": affected_ids,
+                "recommended_next_step": "Investigate internal platform health (service outages, release bugs, auth issues, tracking glitches, holidays) BEFORE contacting customers.",
+                "questions": [
+                    "Did users experience any system downtime, login issues, or latency in the past week?",
+                    "Were there any service disruptions or deployments that may have impacted login frequency?",
+                    "Has engineering or product confirmed an incident or deployment during this timeframe?"
+                ]
+            }
+
         return {
             "source": source,
             "validated": validated,
@@ -193,6 +230,7 @@ class Agent:
             "fallback_reason": reason if source == "template" and reason not in
             (None, "mode=template") else None,
             "headline": output["headline"],
+            "platform_incident": platform_incident,
             "priorities": priorities,
             "note": output.get("note", ""),
         }

@@ -52,7 +52,6 @@ export const AccountDetailDrawer: React.FC<AccountDetailDrawerProps> = ({
   const [outreachBrief, setOutreachBrief] = useState<AgentBriefingResponse | null>(null);
   const [isGeneratingBrief, setIsGeneratingBrief] = useState(false);
   const [briefError, setBriefError] = useState<string | null>(null);
-  const [forceTemplate, setForceTemplate] = useState(false);
 
   // Load account detail with replay when selected
   useEffect(() => {
@@ -113,8 +112,7 @@ export const AccountDetailDrawer: React.FC<AccountDetailDrawerProps> = ({
     setIsGeneratingBrief(true);
     setBriefError(null);
     try {
-      const mode = forceTemplate ? 'template' : 'auto';
-      const brief = await api.getAgentAccountBrief(account.account_id, dataset, mode, refresh);
+      const brief = await api.getAgentAccountBrief(account.account_id, dataset, 'auto', refresh);
       setOutreachBrief(brief);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to generate brief';
@@ -556,16 +554,6 @@ export const AccountDetailDrawer: React.FC<AccountDetailDrawerProps> = ({
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="inline-flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer bg-slate-800/80 px-2 py-1 rounded border border-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={forceTemplate}
-                    onChange={(e) => setForceTemplate(e.target.checked)}
-                    className="rounded text-indigo-600 focus:ring-0"
-                  />
-                  <span>Force template</span>
-                </label>
-
                 <button
                   type="button"
                   onClick={() => handleGenerateOutreachBrief(!!outreachBrief)}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ConfigResponse, Tier } from '../../types';
-import { TIER_CONFIG } from '../../utils/formatters';
+import { TIER_CONFIG, formatThresholdValue } from '../../utils/formatters';
 import { ShieldCheck, Info, Sliders } from 'lucide-react';
 
 interface HowItWorksTabProps {
@@ -121,11 +121,16 @@ export const HowItWorksTab: React.FC<HowItWorksTabProps> = ({ config }) => {
 
         {/* Engine Thresholds */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3 shadow-2xs">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
-            <Sliders className="w-4 h-4 text-indigo-600" />
-            <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-              Engine Threshold Configuration
-            </h3>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <div className="flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-indigo-600" />
+              <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
+                Engine Threshold Configuration
+              </h3>
+            </div>
+            <span className="text-[11px] text-slate-500 font-medium">
+              -50% = usage fell by 50%
+            </span>
           </div>
 
           <div className="overflow-y-auto max-h-72 space-y-2 pr-1">
@@ -139,7 +144,7 @@ export const HowItWorksTab: React.FC<HowItWorksTabProps> = ({ config }) => {
                     {key}
                   </span>
                   <span className="font-mono font-bold text-slate-900 text-[11px] bg-white px-1.5 py-0.5 rounded border border-slate-200">
-                    {val}
+                    {formatThresholdValue(key, val)}
                   </span>
                 </div>
               ))}

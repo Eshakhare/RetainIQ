@@ -60,9 +60,8 @@ class AgentTools:
         }
 
     # ----- helpers --------------------------------------------------------
-    @staticmethod
-    def _summary(r: Dict[str, Any]) -> Dict[str, Any]:
-        return {
+    def _summary(self, r: Dict[str, Any]) -> Dict[str, Any]:
+        out = {
             "account_id": r["account_id"],
             "plan_tier": r["plan_tier"],
             "tier": r["tier"],
@@ -78,6 +77,9 @@ class AgentTools:
             "flags": list(r["flags"]),
             "annotations": list(r["annotations"]),
         }
+        if "possible_platform_cause" in r.get("annotations", []) and self._report.get("annotations"):
+            out["platform_shift_alert"] = [dict(a) for a in self._report["annotations"]]
+        return out
 
     # ----- tools ----------------------------------------------------------
     def list_flagged(self) -> Dict[str, Any]:

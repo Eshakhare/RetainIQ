@@ -2,8 +2,9 @@
 
     python -m retainiq.cli                      # seed data, ranked report
     python -m retainiq.cli --dataset edge_cases
-    python -m retainiq.cli --compare --backtest
-    python -m retainiq.cli --briefing           # weekly briefing (LLM if configured)
+    python -m retainiq.cli --dataset platform_shift
+    python -m retainiq.cli --backtest           # walk-forward replay
+    python -m retainiq.cli --briefing           # weekly briefing (LLM or template)
     python -m retainiq.cli --set at_risk_drop=-0.20 --json
 """
 from __future__ import annotations
@@ -15,7 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .agent.agent import Agent
-from .backtest import backtest, compare
+from .backtest import backtest
 from .config import Config, ConfigError, FLAGGED_TIERS
 from .env import load_env
 from .loader import DATASETS, DatasetError, load_accounts_file, load_raw_accounts
@@ -63,7 +64,6 @@ def main(argv: List[str] = None) -> int:
     p = argparse.ArgumentParser(prog="retainiq", description="Churn-risk early warning report")
     p.add_argument("--dataset", default="seed", help=f"one of {sorted(DATASETS)} or a path to a JSON file")
     p.add_argument("--set", action="append", metavar="KEY=VALUE", help="config override, repeatable")
-    p.add_argument("--compare", action="store_true", help="show ours vs. the starter utility")
     p.add_argument("--backtest", action="store_true", help="show replay: first alert week per account")
     p.add_argument("--briefing", action="store_true", help="print the weekly briefing")
     p.add_argument("--mode", choices=["auto", "template"], default="auto", help="briefing mode")
@@ -80,8 +80,6 @@ def main(argv: List[str] = None) -> int:
         return 2
 
     extra: Dict[str, Any] = {}
-    if args.compare:
-        extra["compare"] = compare(report["results"])
     if args.backtest:
         extra["backtest"] = backtest(report["results"], cfg)
     if args.briefing:
@@ -92,11 +90,6 @@ def main(argv: List[str] = None) -> int:
         return 0
 
     print(_table(report))
-    if "compare" in extra:
-        print("\nOurs vs. starter utility")
-        for c in extra["compare"]:
-            print(f"  {c['account_id']:<8}{c['ours']['tier']:<13}starter={c['starter']['flagged']!s:<6}"
-                  f"{c['verdict']:<21}{c['note']}")
     if "backtest" in extra:
         print("\nReplay (week = weeks of history at the time)")
         for b in extra["backtest"]:

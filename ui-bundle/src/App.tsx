@@ -120,12 +120,11 @@ export const App: React.FC = () => {
   };
 
   // Briefing generation
-  const handleGenerateBriefing = async (forceTemplate: boolean, refresh: boolean) => {
+  const handleGenerateBriefing = async (refresh: boolean = false) => {
     setIsBriefingLoading(true);
     setErrorBanner(null);
     try {
-      const mode = forceTemplate ? 'template' : 'auto';
-      const result = await api.getAgentBriefing(selectedDataset, mode, refresh);
+      const result = await api.getAgentBriefing(selectedDataset, 'auto', refresh);
       setBriefing(result);
     } catch (err: unknown) {
       if (err instanceof ApiError) {

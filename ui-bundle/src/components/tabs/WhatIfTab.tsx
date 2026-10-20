@@ -294,8 +294,8 @@ export const WhatIfTab: React.FC<WhatIfTabProps> = ({
               Tune Engine Detection Thresholds
             </h4>
           </div>
-          <span className="text-[11px] text-slate-400">
-            Rules enforce: critical_drop &le; at_risk_drop &le; watch_drop &lt; 0
+          <span className="text-[11px] text-slate-500">
+            Severity order: critical (-50%) &le; at_risk (-30%) &le; watch (-15%)
           </span>
         </div>
 

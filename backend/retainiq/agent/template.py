@@ -15,7 +15,10 @@ HONEST_LIMIT = "Based on weekly login counts only, so suggested actions are gene
 
 def _questions(r: Dict[str, Any]) -> List[str]:
     qs: List[str] = []
-    if r["tier"] == NEEDS_REVIEW:
+    if "possible_platform_cause" in r.get("annotations", []):
+        qs.append("Did the account experience any system downtime, login failure, or service disruption during the drop?")
+        qs.append("Has engineering or product confirmed an incident or deployment during the latest drop?")
+    elif r["tier"] == NEEDS_REVIEW:
         qs.append("Was there a new rollout, new locations or a change in how logins are counted?")
     elif r["pattern"] == "sudden_cliff":
         week = r.get("cliff_week")

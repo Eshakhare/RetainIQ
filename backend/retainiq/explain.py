@@ -69,4 +69,5 @@ def explain(r: Dict[str, Any], cfg: Config) -> Dict[str, str]:
         reason += " Note: early weeks were well above current usage (possible long onboarding)."
     if "possible_platform_cause" in r["annotations"]:
         reason += " Possible platform-wide cause: many accounts moved together last week."
+        action = "Check internal platform/outage status before customer outreach; pause outreach if widespread issue."
     return {"reason": reason, "recommended_action": action}

@@ -1,99 +1,164 @@
 # RetainIQ
 
-Churn-risk early warning for Vantage Retail Systems. It reads weekly login counts per account and produces a ranked, explained list of accounts whose usage is falling. Design: [SOLUTION_DESIGN.md](SOLUTION_DESIGN.md). Build spec and API contract: [ARCHITECTURE.md](ARCHITECTURE.md).
+**Predictive Churn-Risk Early Warning Engine for Vantage Retail Systems.**
 
-This repository contains the **v1 backend**: the scoring engine, replay and starter comparison, the REST API, the CLI and the AI agent (with template fallback). The React UI is built separately and only calls the API.
+RetainIQ analyzes weekly account login trajectories to detect customer engagement declines before churn occurs. It provides Customer Success teams with an executive dashboard, explainable risk classifications, a walk-forward simulation backtester, and automated intelligence briefings.
 
-## Run it
+> **Architecture & Design Documentation:**
+> - For problem definition, operational assumptions, and business trade-offs, read **[SOLUTION_DESIGN.md](SOLUTION_DESIGN.md)**.
+> - For technical architecture, algorithm specs, API contracts, and React UI layout, read **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
+---
+
+## How to Run the System
+
+### 1. Start the Backend API (FastAPI & Engine)
+Prerequisites: Python 3.10+
+
+```powershell
+# Navigate to the backend directory
+cd backend
+
+# Create and activate virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Install dependencies
+python -m pip install -r requirements.txt
+
+# Start the API server on http://localhost:8000 (Swagger interactive docs at http://localhost:8000/docs)
+python -m uvicorn retainiq.api.app:app --reload
+```
+
+### 2. Start the Frontend Application (React + Vite)
+Prerequisites: Node.js 18+
+
+```powershell
+# In a separate terminal, navigate to the frontend directory
+cd ui-bundle
+
+# Install dependencies
+npm install
+
+# Start the development server (runs on http://localhost:5173)
+npm run dev
+```
+👉 Open your browser at **http://localhost:5173**.
+
+### 3. Run via Command-Line Interface (CLI)
+The CLI runs the exact same deterministic engine and produces the same reports as the web API:
 
 ```powershell
 cd backend
-python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements.txt
 
-# CLI report on the seed data (same engine as the API)
-.\.venv\Scripts\python -m retainiq.cli --compare --backtest --briefing
+# Standard ranked report on the seed customer portfolio
+.\.venv\Scripts\python -m retainiq.cli
 
-# API on http://127.0.0.1:8000 (docs at /docs)
-.\.venv\Scripts\python -m uvicorn retainiq.api.app:app --reload
+# Test other datasets
+.\.venv\Scripts\python -m retainiq.cli --dataset platform_shift
+.\.venv\Scripts\python -m retainiq.cli --dataset edge_cases
 
-# tests
+# Run historical walk-forward backtest (first alert week per account)
+.\.venv\Scripts\python -m retainiq.cli --backtest
+
+# Generate weekly intelligence briefing (AI or template fallback)
+.\.venv\Scripts\python -m retainiq.cli --briefing
+
+# Apply on-the-fly threshold overrides and output JSON
+.\.venv\Scripts\python -m retainiq.cli --set at_risk_drop=-0.20 --json
+```
+
+### 4. Run Automated Tests
+The test suite contains **90 automated tests** covering window slicing, classification boundaries, noise guards, API routes, agent tool loops, and validation guardrails:
+
+```powershell
+cd backend
 .\.venv\Scripts\python -m pytest
 ```
 
-All backend commands run from the `backend/` folder. The UI lives in `ui-bundle/` and calls the API.
+---
 
-CLI options: `--dataset seed|edge_cases|platform_shift|<path.json>`, `--set key=value` (threshold override, repeatable), `--mode template` (skip the LLM), `--json`.
+## AI Agent Configuration (Optional: Google Cloud Vertex AI / Gemini)
 
-### Optional: LLM briefings (Gemini 2.5 Flash-Lite on Vertex AI)
+RetainIQ includes a **Churn Analyst Agent** powered by Google Gemini (default: `gemini-2.5-flash-lite`). It synthesizes weekly summaries, identifies platform-wide anomalies, and drafts account outreach briefs.
 
-1. In your Google Cloud project, enable the Vertex AI API (`gcloud services enable aiplatform.googleapis.com`).
-2. Create a service account with the role **Vertex AI User** (`roles/aiplatform.user`) and download its JSON key.
-3. Copy `.env.example` to `.env` and set `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` (default `us-central1`) and `GOOGLE_APPLICATION_CREDENTIALS` (path to the key). `LLM_MODEL` defaults to `gemini-2.5-flash-lite`.
-4. Check `GET /api/health`: `llm_available` should be `true`.
+### Supported Providers:
+1. **Google Cloud Vertex AI (Default):**
+   - Enable Vertex AI in your GCP project: `gcloud services enable aiplatform.googleapis.com`
+   - Create a service account with the **Vertex AI User** role (`roles/aiplatform.user`) and download its JSON key.
+   - In `backend/.env`, configure:
+     ```bash
+     LLM_PROVIDER=vertex
+     GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+     GOOGLE_CLOUD_LOCATION=us-central1
+     GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
+     LLM_MODEL=gemini-2.5-flash-lite
+     ```
+2. **Google Gemini API Key:**
+   - In `backend/.env`, configure:
+     ```bash
+     LLM_PROVIDER=gemini
+     LLM_API_KEY=your-gemini-api-key
+     LLM_MODEL=gemini-2.5-flash-lite
+     ```
 
-Without these the agent returns template text and says so (`source: "template"`, with a `fallback_reason`). Nothing else changes. `LLM_PROVIDER=gemini` with `LLM_API_KEY` is also supported.
+### Deterministic Fallback:
+If no LLM credentials are configured or if external API calls fail or time out, **the system automatically falls back to deterministic template text** (`source: "template"` with `fallback_reason`). Core scoring and dashboard operations never fail because of an LLM.
 
-## API
+---
 
-| Method and path | Purpose |
+## API Summary
+
+All endpoints return JSON and have CORS enabled for development.
+
+| Method & Path | Purpose |
 |---|---|
-| GET `/api/health` | Liveness, `llm_available` |
-| GET `/api/config` | Thresholds and definitions |
-| GET `/api/datasets` | `seed`, `edge_cases`, `platform_shift` |
-| POST `/api/analyze` | `{dataset?, accounts?, config_overrides?}`: ranked results, summary, portfolio annotations (what-if panel) |
-| GET `/api/accounts/{id}?dataset=` | One account plus replay timeline |
-| GET `/api/backtest?dataset=` | Tier as of each past week, first alert week vs. starter |
-| GET `/api/compare?dataset=` | Ours vs. starter: `agree`, `we_catch_more`, `starter_false_alarm`, `starter_error` |
-| POST `/api/agent/briefing` | `{dataset?, mode?: auto\|template, refresh?}` weekly briefing |
-| POST `/api/agent/accounts/{id}/brief` | Outreach brief for one account |
+| `GET /api/health` | Service health and LLM availability status |
+| `GET /api/config` | Active thresholds and plain-language definitions |
+| `GET /api/datasets` | List available datasets (`seed`, `edge_cases`, `platform_shift`) |
+| `POST /api/analyze` | Run engine scoring; supports custom records and threshold overrides |
+| `GET /api/accounts/{id}?dataset=` | Single account detail, feature windows, and replay timeline |
+| `GET /api/backtest?dataset=` | Walk-forward replay simulation and first alert week per account |
+| `POST /api/agent/briefing` | Generate CS Weekly Intelligence Briefing (AI or template fallback) |
+| `POST /api/agent/accounts/{id}/brief` | Generate single-account outreach guidance and diagnostic questions |
 
-Errors always look like `{"error": {"code", "message"}}`. CORS is open for any origin (local demo).
+---
 
-## Layout
+## Classification Results on the Seed Data
 
-```
-backend/
-  retainiq/
-    config.py loader.py features.py classify.py annotate.py rank.py explain.py
-    pipeline.py backtest.py starter_baseline.py cli.py env.py
-    agent/  client.py tools.py agent.py validate.py template.py cache.py
-    api/app.py
-  data/  seed_accounts.json (copy of the provided data, untouched)  edge_cases.json  platform_shift.json
-  tests/  requirements.txt  pytest.ini  .env.example (copy to .env)
-ui-bundle/     single-page React UI (calls the API)
-starter_kit/   provided starter code, untouched (loaded by starter_baseline.py)
-```
+| Account | Plan Tier | 4-Week Drop | RetainIQ Classification | Diagnostic Reason |
+|---|---|---|---|---|
+| A-05 Cascade Meridian | Enterprise | -79% | **Critical** | Sudden cliff collapse at week 10; usage fell to near zero. |
+| A-01 Northwind Traders | Growth | -62% | **Critical** | Sudden cliff collapse at week 10. |
+| A-04 Harborview Inc | Enterprise | -21% | **Watch** | Slow erosion pattern; persistent decline exceeding noise floor. |
+| A-02 Bluepeak Corp | Growth | +4% | **Healthy** | Stable usage within normal historical range. |
+| A-07 Choppy Retail Co | Growth | -4% | **Healthy** (`volatile`) | Normal retail login variance; drop does not exceed noise floor ($2 \times CV$). |
+| A-03 Solace Digital | Starter | +55% | **Healthy** (`growing`) | Strong upward usage expansion. |
+| A-06 Fresh Startup Co | Starter | n/a | **Too new to score** | 5 weeks of history; initial spike is onboarding. Routed to onboarding. |
+| A-08 New Signup LLC | Starter | n/a | **Too new to score** | 2 weeks of history; insufficient baseline. Handled safely without error. |
 
-Only `pipeline.py` computes a tier. The API, CLI, agent and tests all call it.
+---
 
-## Result on the seed data
+## Known Limitations
 
-| Account | Tier | Drop |
-|---|---|---|
-| A-05 Cascade Meridian | Critical | -79% |
-| A-01 Northwind Traders | Critical | -62% |
-| A-04 Harborview Inc | Watch (missed by the starter utility at -17%) | -21% |
-| A-02, A-03, A-07 | Healthy | +4%, +55%, -4% |
-| A-06, A-08 | Too new to score (starter gives a false alarm / crashes) | n/a |
+- **Authentication vs. Value:** Login counts measure authentication events, not workflow completion or product value depth. Background inventory syncs and shared terminal logins can distort pure session counts.
+- **Retail Seasonality:** With 12 weeks of historical data, annual seasonality (such as Q4 holiday spikes or post-holiday lulls) cannot be statistically separated from customer churn without 52+ weeks.
+- **Heuristic Thresholds:** Thresholds are mathematically reasoned and backtested against historical variance, but have not yet been calibrated against true contract termination labels.
+- **Early Collapse vs. Long Onboarding:** Login data alone cannot reliably distinguish an extended 4-week customer onboarding from an account that suffered an early collapse to low steady usage without peer-cohort benchmarks.
+- **Local Prototype Scope:** The local demo does not implement multi-tenant authentication, user RBAC, or persistent cloud database storage.
+- **Date Semantics:** Time series represent weekly sequences without explicit calendar dates; the final entry is assumed to be the latest completed calendar week.
 
-## Implementation notes and deviations from the design
+---
 
-- `early_ramp_down` compares the first 4 weeks with the **baseline** level, not the current level as first written. With the current level, genuine collapses (A-01, A-05) were mislabelled as long onboarding. Docs are updated to match.
-- The agent pre-fetches portfolio stats and the flagged list, then lets the model call `get_account` / `get_replay` (max 6 calls, 20 s, temperature 0). Validation also requires every Critical and At-risk account to appear, in engine rank order.
-- Template output is built straight from engine facts, so it is reported as `validated: true` without going through the LLM validator.
-- The LLM adapter calls Gemini on Vertex AI (`VertexClient`; `LLMClient` is the seam for other providers). It has been tested with mocks only, not against the live API.
-- Agent results are cached in `.cache/agent_cache.json` (keyed by facts, prompt version, model); `refresh: true` bypasses it.
-- `dataset` also accepts `platform_shift` (the platform-wide shift fixture is kept apart so it cannot disturb the other datasets' portfolio statistics).
+## Phase 2 Roadmap: What We Can Achieve
 
-## Known limitations
+Future iterations can expand RetainIQ from a single-signal warning system into an enterprise customer intelligence platform:
 
-- Login counts measure authentication events, not value; inventory software often runs in the background.
-- 12 weeks cannot separate seasonality from decline; thresholds are reasoned, not validated against real churn.
-- A long onboarding and an early collapse to low steady usage look identical in logins alone (see `early_collapse` fixture); peer comparison is the phase 2 fix.
-- No authentication or rate limiting (local demo).
-- Time series have no dates; the last value is assumed to be the latest complete week.
+1. **Richer Telemetry Signals:** Ingest distinct active seats, core workflow events (purchase orders, inventory adjustments, barcode scans), and support ticket escalations.
+2. **Contract & Renewal Weighting:** Prioritize accounts by actual ARR and upcoming renewal dates rather than subscription plan proxies.
+3. **Peer-Cohort Benchmarking:** Compare accounts against similar retail segments and store counts to separate macroeconomic trends from account-specific disengagement.
+4. **CS Feedback Loop:** Allow CS reps to mark alerts as *Saved*, *Churned*, or *False Alarm* directly in the UI, building labelled ground truth for supervised machine learning.
+5. **Automated Notification Delivery:** Scheduled weekly digests delivered directly to Slack or synced into HubSpot/Salesforce CRM.
 
-## Next steps (phase 2)
+👉 **For the complete Phase 2 specification and data requirements, see [SOLUTION_DESIGN.md Section 9](SOLUTION_DESIGN.md#9-phase-2-feasible-next-steps-and-future-work).**
 
-See SOLUTION_DESIGN.md section 9: richer signals, renewal-weighted priority, peer cohorts, feedback loop, scheduled delivery.

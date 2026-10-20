@@ -127,6 +127,14 @@ def validate_output(output: Any, facts: Facts, cfg: Config, *, kind: str,
             problems.append(f"invalid tier {p['tier']!r}")
 
     if kind == "account_brief":
+        if target_id:
+            for p in priorities:
+                if isinstance(p.get("account_id"), str) and p["account_id"].strip().upper() == target_id.strip().upper():
+                    p["account_id"] = target_id
+            matching = [p for p in priorities if p.get("account_id") == target_id]
+            if len(matching) == 1 and len(priorities) > 1:
+                output["priorities"] = matching
+                priorities = matching
         if len(priorities) != 1 or priorities[0]["account_id"] != target_id:
             problems.append("account brief must contain exactly the requested account")
     else:

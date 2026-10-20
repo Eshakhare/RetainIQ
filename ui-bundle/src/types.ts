@@ -159,6 +159,16 @@ export interface PriorityItem {
   questions: string[];
 }
 
+export interface PlatformIncident {
+  active: boolean;
+  summary: string;
+  median_wow_change_pct: number;
+  accounts_affected_count: number;
+  affected_account_ids: string[];
+  recommended_next_step: string;
+  questions: string[];
+}
+
 export interface AgentBriefingResponse {
   source: 'llm' | 'template';
   validated: boolean;
@@ -166,6 +176,7 @@ export interface AgentBriefingResponse {
   model: string | null;
   fallback_reason: string | null;
   headline: string;
+  platform_incident?: PlatformIncident | null;
   priorities: PriorityItem[];
   note: string;
 }
